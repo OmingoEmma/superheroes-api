@@ -1,23 +1,48 @@
-from app import create_app, db
-from app.models import Hero, Power, HeroPower
+from run import app
+from extensions import db
+from models import Hero, Power, HeroPower
+from random import choice as rc
 
-app = create_app()
 
 with app.app_context():
-    db.drop_all()
-    db.create_all()
+    print("Clearing db...")
+    HeroPower.query.delete()
+    Hero.query.delete()
+    Power.query.delete()
 
-    h1 = Hero(name="Kamala Khan", super_name="Ms. Marvel")
-    h2 = Hero(name="Gwen Stacy", super_name="Spider-Gwen")
+    print("Seeding powers...")
+    powers = [
+        Power(name="super strength", description="gives the wielder super-human strengths"),
+        Power(name="flight", description="gives the wielder the ability to fly through the skies at supersonic speed"),
+        Power(name="super human senses", description="allows the wielder to use her senses at a super-human level"),
+        Power(name="elasticity", description="can stretch the human body to extreme lengths"),
+    ]
+    db.session.add_all(powers)
 
-    p1 = Power(name="flight", description="gives the wielder the ability to fly through the skies at supersonic speed")
-    p2 = Power(name="super strength", description="gives the wielder super-human strengths")
+    print("Seeding heroes...")
+    heroes = [
+        Hero(name="Kamala Khan", super_name="Ms. Marvel"),
+        Hero(name="Doreen Green", super_name="Squirrel Girl"),
+        Hero(name="Gwen Stacy", super_name="Spider-Gwen"),
+        Hero(name="Janet Van Dyne", super_name="The Wasp"),
+        Hero(name="Wanda Maximoff", super_name="Scarlet Witch"),
+        Hero(name="Carol Danvers", super_name="Captain Marvel"),
+        Hero(name="Jean Grey", super_name="Dark Phoenix"),
+        Hero(name="Ororo Munroe", super_name="Storm"),
+        Hero(name="Kitty Pryde", super_name="Shadowcat"),
+        Hero(name="Elektra Natchios", super_name="Elektra"),
+    ]
+    db.session.add_all(heroes)
 
-    db.session.add_all([h1, h2, p1, p2])
+    print("Linking heroes to powers...")
+    strengths = ["Strong", "Weak", "Average"]
+    hero_powers = []
+    for hero in heroes:
+        power = rc(powers)
+        hero_powers.append(
+            HeroPower(hero=hero, power=power, strength=rc(strengths))
+        )
+    db.session.add_all(hero_powers)
     db.session.commit()
 
-    hp1 = HeroPower(strength="Strong", hero_id=h1.id, power_id=p1.id)
-    hp2 = HeroPower(strength="Average", hero_id=h2.id, power_id=p2.id)
-
-    db.session.add_all([hp1, hp2])
-    db.session.commit()
+    
